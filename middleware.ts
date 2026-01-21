@@ -42,6 +42,18 @@ function applyCorsHeaders(req: NextRequest, res: NextResponse) {
   res.headers.set("Access-Control-Allow-Headers", "Content-Type, X-CSRF-Token");
 }
 
+function applySecurityHeaders(res: NextResponse) {
+  res.headers.set("Cross-Origin-Opener-Policy", "same-origin");
+  res.headers.set("Cross-Origin-Resource-Policy", "same-origin");
+  res.headers.set("Cross-Origin-Embedder-Policy", "require-corp");
+  res.headers.set("X-XSS-Protection", "1; mode=block");
+}
+
+function applyLogoutHeaders(pathname: string, res: NextResponse) {
+  if (pathname !== "/api/auth/signout") return;
+  res.headers.set("Clear-Site-Data", "\"cache\", \"cookies\", \"storage\"");
+}
+
 export function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
@@ -55,10 +67,12 @@ export function middleware(req: NextRequest) {
     });
     res.headers.set("Content-Security-Policy", csp);
     res.headers.set("x-nonce", nonce);
+    applySecurityHeaders(res);
     return res;
   }
 
   const res = NextResponse.next();
+  applySecurityHeaders(res);
 
   if (pathname !== "/api/csrf") {
     applyCorsHeaders(req, res);
@@ -69,6 +83,7 @@ export function middleware(req: NextRequest) {
   }
 
   if (pathname.startsWith("/api/auth") || pathname === "/api/csrf") {
+    applyLogoutHeaders(pathname, res);
     return res;
   }
 

@@ -1,3 +1,4 @@
+![Praktikum Preview](public/og-images.webp)
 # Praktikum — Attendance & Learning Module Platform
 
 **[Live Preview](https://praktikum-caseinn.vercel.app/)** | **[GitHub Repository](https://github.com/caseinn/praktikum)**
