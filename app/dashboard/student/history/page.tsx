@@ -1,8 +1,8 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/core/auth";
+import { prisma } from "@/lib/core/prisma";
 import { redirect } from "next/navigation";
 import { CalendarCheck, Clock, CheckCircle2, XCircle } from "lucide-react";
-import { formatWIB, formatWIBTimeOnly } from "@/lib/time";
+import { formatWIB, formatWIBTimeOnly } from "@/lib/shared/time";
 
 export default async function StudentHistoryPage() {
   const session = await auth();
@@ -34,7 +34,6 @@ export default async function StudentHistoryPage() {
       .map((a) => [a.sessionId, a])
   );
 
-  const totalSesi = pastSessions.length;
   let hadirCount = 0;
   let izinCount = 0;
   let tidakHadirCount = 0;

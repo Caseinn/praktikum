@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/core/auth";
+import { prisma } from "@/lib/core/prisma";
 import { redirect } from "next/navigation";
-import { CalendarCheck, UserCheck, ArrowRight, History, CheckCircle2, Clock, XCircle } from "lucide-react";
-import { formatWIB } from "@/lib/time";
+import { CalendarCheck, ArrowRight, History, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { formatWIB } from "@/lib/shared/time";
 
 export default async function StudentDashboard() {
   const session = await auth();
@@ -41,9 +41,6 @@ export default async function StudentDashboard() {
   const hadirCount = pastAttendance.filter((a) => a.status === "HADIR").length;
   const izinCount = pastAttendance.filter((a) => a.status === "IZIN").length;
   const tidakHadirCount = Math.max(totalSesiLalu - hadirCount - izinCount, 0);
-  const totalRecorded = hadirCount + izinCount + tidakHadirCount;
-  const attendanceRate =
-    totalRecorded > 0 ? Math.round(((hadirCount + izinCount) / totalRecorded) * 100) : 0;
 
   return (
     <main className="space-y-6 p-4 sm:p-6 animate-fade-up">

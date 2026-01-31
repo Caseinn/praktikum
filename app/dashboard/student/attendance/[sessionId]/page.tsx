@@ -1,4 +1,4 @@
-import AttendanceSessionDetail from "@/components/dashboard/attendance/attendance-session-detail";
+import AttendanceSessionDetail from "@/components/dashboard/attendance-session-detail";
 
 type StudentAttendanceSessionPageProps = {
   params: Promise<{ sessionId: string }>;

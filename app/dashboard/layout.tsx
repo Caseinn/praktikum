@@ -1,7 +1,7 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/core/auth";
 import { redirect } from "next/navigation";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import ToasterProvider from "@/components/shared/toaster-provider";
 import DashboardToast from "@/components/shared/dashboard-toast";

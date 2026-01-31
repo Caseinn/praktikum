@@ -1,5 +1,4 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, Plus, FileSpreadsheet } from "lucide-react";
 
 export default function AdminStudentsLoading() {
   return (

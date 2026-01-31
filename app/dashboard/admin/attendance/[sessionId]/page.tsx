@@ -1,17 +1,14 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import AttendanceDataTable from "@/components/dashboard/attendance/attendance-data-table";
-import { formatWIB, formatWIBTimeOnly } from "@/lib/time";
+import { auth } from "@/lib/core/auth";
+import { prisma } from "@/lib/core/prisma";
+import AttendanceDataTable from "@/components/dashboard/admin/attendance-data-table";
+import { formatWIB, formatWIBTimeOnly } from "@/lib/shared/time";
 import {
   MapPin,
   Clock,
   Calendar,
   XCircle,
-  CheckCircle2,
-  Users,
-  AlertCircle,
   ArrowLeft,
 } from "lucide-react";
 
@@ -77,7 +74,6 @@ export default async function AdminAttendanceSessionPage({
     }),
   ]);
 
-  const rosterNims = new Set(roster.map((student) => student.nim));
   const recordByNim = new Map<string, typeof records[number]>();
   records.forEach((recordItem) => {
     if (recordItem.user.nim) {

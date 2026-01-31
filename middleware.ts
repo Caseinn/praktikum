@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, CSRF_TTL_SECONDS } from "@/lib/csrf";
+import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, CSRF_TTL_SECONDS } from "@/lib/core/csrf";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 

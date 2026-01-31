@@ -1,8 +1,8 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/core/auth";
+import { prisma } from "@/lib/core/prisma";
 import { redirect } from "next/navigation";
 import { Users, UserCheck, UserX } from "lucide-react";
-import StudentsTable from "@/components/dashboard/students/students-table";
+import StudentsTable from "@/components/dashboard/admin/students/students-table";
 
 export default async function AdminStudentsPage() {
   const session = await auth();

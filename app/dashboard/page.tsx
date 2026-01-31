@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/core/auth";
 import DashboardRedirect from "@/components/dashboard/dashboard-redirect";
 import { LOGIN_SUCCESS_PARAM, LOGIN_SUCCESS_VALUE } from "@/lib/toast-keys";
 import { redirect } from "next/navigation";

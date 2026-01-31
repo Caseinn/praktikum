@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, LogIn } from "lucide-react";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/core/auth";
 
 export default async function HomePage() {
   const session = await auth();

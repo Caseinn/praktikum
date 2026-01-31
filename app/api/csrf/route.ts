@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
-import { CSRF_COOKIE_NAME, CSRF_TTL_SECONDS } from "@/lib/csrf";
+import { CSRF_COOKIE_NAME, CSRF_TTL_SECONDS } from "@/lib/core/csrf";
 
 export async function GET() {
   const cookieStore = await cookies();

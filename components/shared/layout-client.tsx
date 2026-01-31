@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { type ReactNode, useId } from 'react';
-import { cn } from '@/lib/cn';
+import { cn } from "@/lib/shared/utils";
 import { getSection } from '@/lib/source/navigation';
 
 export function Body({ children }: { children: ReactNode }): React.ReactElement {

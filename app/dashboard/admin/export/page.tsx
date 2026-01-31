@@ -1,8 +1,7 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/core/auth";
+import { prisma } from "@/lib/core/prisma";
 import { redirect } from "next/navigation";
 import { Download, FileSpreadsheet } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export default async function AdminExportPage() {
   const session = await auth();
@@ -28,7 +27,7 @@ export default async function AdminExportPage() {
           </div>
 
           <a
-            href="/api/attendance/export"
+            href="/api/attendance/admin/export"
             download="presensi.csv"
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-fd-primary px-4 py-3 font-semibold text-fd-primary-foreground transition hover:opacity-90"
           >

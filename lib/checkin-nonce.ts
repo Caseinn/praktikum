@@ -1,4 +1,4 @@
-import { redis } from "@/lib/redis";
+import { redis } from "@/lib/core/redis";
 
 const memoryStore = new Map<string, number>();
 const NONCE_TTL_SECONDS = 60;

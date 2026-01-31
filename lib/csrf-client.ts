@@ -1,6 +1,6 @@
 "use client";
 
-import { CSRF_COOKIE_NAME } from "@/lib/csrf";
+import { CSRF_COOKIE_NAME } from "@/lib/core/csrf";
 
 function readCookie(name: string): string | null {
   if (typeof document === "undefined") return null;

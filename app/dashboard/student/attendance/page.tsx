@@ -1,7 +1,7 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/core/auth";
+import { prisma } from "@/lib/core/prisma";
 import { redirect } from "next/navigation";
-import AttendanceList from "@/components/dashboard/attendance/attendance-list";
+import AttendanceList from "@/components/dashboard/attendance-list";
 
 export default async function StudentAttendancePage() {
   const session = await auth();
