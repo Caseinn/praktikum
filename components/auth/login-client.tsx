@@ -29,7 +29,6 @@ export default function LoginClient({ error }: LoginClientProps) {
   async function handleGoogleLogin() {
     if (loading) return;
 
-    const toastId = toast.loading("Mengalihkan ke Google...");
     try {
       setLoading(true);
       const result = await signIn("google", {
@@ -37,18 +36,17 @@ export default function LoginClient({ error }: LoginClientProps) {
         redirect: false,
       });
       if (result?.error) {
-        toast.error(getErrorMessage(result.error) ?? "Gagal login.", { id: toastId });
+        toast.error(getErrorMessage(result.error) ?? "Gagal login.");
         setLoading(false);
         return;
       }
 
       const target = result?.url ?? "/dashboard";
-      toast.success("Mengalihkan...", { id: toastId });
       setTimeout(() => {
         window.location.href = target;
       }, 800);
     } catch {
-      toast.error("Gagal memulai login.", { id: toastId });
+      toast.error("Gagal memulai login.");
       setLoading(false);
     }
   }

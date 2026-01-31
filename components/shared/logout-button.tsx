@@ -2,32 +2,25 @@
 "use client";
 
 import { signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { LOGOUT_TOAST_KEY } from "@/lib/toast-keys";
 import { LogOut } from "lucide-react";
 
 export function LogoutButton() {
-  const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
 
-    const toastId = toast.loading("Memproses logout...");
     setIsLoggingOut(true);
+    toast.success("Logout berhasil.");
     try {
-      const result = await signOut({ redirect: false, callbackUrl: "/" });
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem(LOGOUT_TOAST_KEY, "Logout berhasil.");
-      }
-      toast.dismiss(toastId);
-      const target = result?.url ?? "/";
-      router.push(target);
-      router.refresh();
+      await signOut({ redirect: false, callbackUrl: "/" });
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
     } catch {
-      toast.error("Gagal logout.", { id: toastId });
+      toast.error("Gagal logout.");
       setIsLoggingOut(false);
     }
   };

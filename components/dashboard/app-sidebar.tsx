@@ -174,8 +174,8 @@ function LogoutButton() {
 
     try {
       const { signOut } = await import("next-auth/react");
-      await signOut({ redirect: false, callbackUrl: "/" });
-      window.location.href = "/";
+      await signOut({ redirect: false, callbackUrl: "/?logout=success" });
+      window.location.href = "/?logout=success";
     } catch {
       setIsLoggingOut(false);
     }
