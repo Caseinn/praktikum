@@ -1,7 +1,9 @@
 import { auth } from "@/lib/core/auth";
 import { attendanceService } from "@/lib/features/attendance/service";
 import { checkRateLimit, getRateLimitKey } from "@/lib/core/rate-limit";
-import { ok, created, error, unauthorized, forbidden, badRequest } from "@/lib/shared/api/response";
+import { ok, created, error, unauthorized, forbidden } from "@/lib/shared/api/response";
+import { validateBody } from "@/lib/shared/api/validation";
+import { sessionCreateSchema } from "@/lib/validations/schemas";
 
 const MAX_BODY_BYTES = 20_000;
 
@@ -34,28 +36,13 @@ export async function POST(req: Request) {
   try {
     body = rawBody ? JSON.parse(rawBody) : {};
   } catch {
-    return badRequest("Payload tidak valid.");
+    return error("Payload tidak valid.", 400);
   }
 
-  const { title, startTime, latitude, longitude, radius } = body as {
-    title?: string;
-    startTime?: string;
-    latitude?: number;
-    longitude?: number;
-    radius?: number;
-  };
+  const validation = validateBody(sessionCreateSchema, body);
+  if (!validation.success) return validation.response;
 
-  if (!title || typeof title !== "string") {
-    return badRequest("Judul wajib diisi.");
-  }
-
-  if (!startTime || typeof startTime !== "string") {
-    return badRequest("Waktu mulai wajib diisi.");
-  }
-
-  if (typeof latitude !== "number" || typeof longitude !== "number" || typeof radius !== "number") {
-    return badRequest("Koordinat dan radius wajib berupa angka.");
-  }
+  const { title, startTime, latitude, longitude, radius } = validation.data;
 
   const admin = await auth();
   if (!admin?.user?.email) return unauthorized();

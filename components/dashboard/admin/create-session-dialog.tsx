@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { CalendarPlus, MapPin, Navigation, Info } from "lucide-react";
+import { DateTimePicker } from "@/components/dashboard/datetime-picker";
 import { formatWIBInputValue } from "@/lib/shared/time";
 import { apiClient } from "@/lib/api/client";
 import type { SessionFormData } from "@/lib/types/attendance";
@@ -168,11 +169,9 @@ export function CreateSessionDialog() {
 
             <Field>
               <Label htmlFor="startTime">Waktu Mulai (WIB)</Label>
-              <Input
-                id="startTime"
-                type="datetime-local"
+              <DateTimePicker
                 value={form.startTime}
-                onChange={(e) => setForm((prev) => ({ ...prev, startTime: e.target.value }))}
+                onChange={(value) => setForm((prev) => ({ ...prev, startTime: value }))}
                 required
               />
               <p className="text-xs text-fd-muted-foreground mt-1">

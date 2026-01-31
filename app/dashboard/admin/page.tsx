@@ -7,13 +7,9 @@ import {
   Users,
   FileSpreadsheet,
   ArrowRight,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  TrendingUp,
 } from "lucide-react";
 import AccessDenied from "@/components/shared/access-denied";
-import { SessionChart } from "@/components/dashboard/session-chart";
+import { DashboardStatsPolling } from "@/components/dashboard/admin/dashboard-stats-polling";
 
 export default async function AdminDashboard() {
   const session = await auth();
@@ -73,74 +69,17 @@ export default async function AdminDashboard() {
     hadir: hadirBySession.get(s.id) ?? 0,
   }));
 
+  const initialStats = {
+    activeCount,
+    upcomingCount,
+    expiredCount,
+    studentCount,
+    totalSessions,
+  };
+
   return (
     <main className="space-y-8 p-4 sm:p-6">
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="rounded-xl border border-fd-border bg-fd-card p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-xs uppercase tracking-[0.2em] text-fd-muted-foreground">
-              Total Sesi
-            </p>
-            <Calendar className="h-5 w-5 text-fd-muted-foreground" />
-          </div>
-          <p className="mt-3 text-3xl font-semibold text-fd-foreground">{totalSessions}</p>
-        </div>
-
-        <div className="rounded-xl border border-fd-border bg-fd-card p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-xs uppercase tracking-[0.2em] text-fd-muted-foreground">
-              Aktif
-            </p>
-            <CheckCircle2 className="h-5 w-5 text-fd-success" />
-          </div>
-          <p className="mt-3 text-3xl font-semibold text-fd-success">{activeCount}</p>
-        </div>
-
-        <div className="rounded-xl border border-fd-border bg-fd-card p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-xs uppercase tracking-[0.2em] text-fd-muted-foreground">
-              Akan Datang
-            </p>
-            <Clock className="h-5 w-5 text-fd-warning" />
-          </div>
-          <p className="mt-3 text-3xl font-semibold text-fd-warning">{upcomingCount}</p>
-        </div>
-
-        <div className="rounded-xl border border-fd-border bg-fd-card p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-xs uppercase tracking-[0.2em] text-fd-muted-foreground">
-              Berakhir
-            </p>
-            <XCircle className="h-5 w-5 text-fd-error" />
-          </div>
-          <p className="mt-3 text-3xl font-semibold text-fd-error">{expiredCount}</p>
-        </div>
-
-        <div className="rounded-xl border border-fd-border bg-fd-card p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-xs uppercase tracking-[0.2em] text-fd-muted-foreground">
-              Total Mhs
-            </p>
-            <Users className="h-5 w-5 text-fd-muted-foreground" />
-          </div>
-          <p className="mt-3 text-3xl font-semibold text-fd-foreground">{studentCount}</p>
-        </div>
-      </section>
-
-      <section className="rounded-xl border border-fd-border bg-fd-card p-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-fd-primary/10">
-            <TrendingUp className="h-5 w-5 text-fd-primary" />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-fd-foreground">Kehadiran per Sesi</h2>
-            <p className="text-sm text-fd-muted-foreground">
-              Jumlah mahasiswa yang hadir pada sesi terakhir.
-            </p>
-          </div>
-        </div>
-        <SessionChart data={chartData} />
-      </section>
+      <DashboardStatsPolling initialStats={initialStats} initialChartData={chartData} />
 
       <section className="grid gap-4 sm:grid-cols-3">
         <Link

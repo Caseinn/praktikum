@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/core/auth";
 import { prisma } from "@/lib/core/prisma";
-import AttendanceDataTable from "@/components/dashboard/admin/attendance-data-table";
+import { SessionDetailPolling } from "@/components/dashboard/admin/session-detail-polling";
 import { formatWIB, formatWIBTimeOnly } from "@/lib/shared/time";
 import {
   MapPin,
@@ -104,6 +104,13 @@ export default async function AdminAttendanceSessionPage({
     attendedAtLabel: row.attendedAt ? formatWIB(row.attendedAt) : "-",
   }));
 
+  const initialStats = {
+    hadirCount,
+    izinCount,
+    tidakHadirCount,
+    belumCount,
+  };
+
   return (
     <main className="min-h-screen p-4 sm:p-6">
       <Link
@@ -147,36 +154,13 @@ export default async function AdminAttendanceSessionPage({
             </div>
           </div>
 
-          {/* Summary Stats */}
-          <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-4">
-            <div className="rounded-lg border border-fd-border bg-fd-success/10 p-3 text-center">
-              <p className="text-xs uppercase tracking-[0.2em] text-fd-success">Hadir</p>
-              <p className="mt-1 text-2xl font-semibold text-fd-success">{hadirCount}</p>
-            </div>
-            <div className="rounded-lg border border-fd-border bg-fd-warning/10 p-3 text-center">
-              <p className="text-xs uppercase tracking-[0.2em] text-fd-warning">Izin</p>
-              <p className="mt-1 text-2xl font-semibold text-fd-warning">{izinCount}</p>
-            </div>
-            <div className="rounded-lg border border-fd-border bg-fd-error/10 p-3 text-center">
-              <p className="text-xs uppercase tracking-[0.2em] text-fd-error">Tidak Hadir</p>
-              <p className="mt-1 text-2xl font-semibold text-fd-error">{tidakHadirCount}</p>
-            </div>
-            <div className="rounded-lg border border-fd-border bg-fd-muted p-3 text-center">
-              <p className="text-xs uppercase tracking-[0.2em] text-fd-muted-foreground">
-                {isExpired ? "Belum Tercatat" : "Belum Presensi"}
-              </p>
-              <p className="mt-1 text-2xl font-semibold text-fd-foreground">{belumCount}</p>
-            </div>
-          </div>
+          <SessionDetailPolling
+            sessionId={attendanceSession.id}
+            initialStats={initialStats}
+            initialRows={tableRows}
+            isExpired={isExpired}
+          />
         </div>
-
-        {/* Attendance Table */}
-          <div className="min-w-full">
-            <AttendanceDataTable
-              sessionId={attendanceSession.id}
-              rows={tableRows}
-            />
-          </div>
       </div>
     </main>
   );

@@ -1,5 +1,4 @@
 import { auth } from "@/lib/core/auth";
-import { prisma } from "@/lib/core/prisma";
 import { redirect } from "next/navigation";
 import { Download, FileSpreadsheet } from "lucide-react";
 
@@ -7,8 +6,6 @@ export default async function AdminExportPage() {
   const session = await auth();
   if (!session?.user?.email) redirect("/login");
   if (session.user.role !== "ADMIN") redirect("/dashboard/student");
-
-  const attendanceCount = await prisma.attendanceRecord.count();
 
   return (
     <main className="flex min-h-[calc(100vh-8rem)] items-center justify-center p-4 sm:p-6 animate-fade-up">
@@ -20,9 +17,6 @@ export default async function AdminExportPage() {
             </div>
             <div>
               <h1 className="text-xl font-semibold text-fd-foreground">Export Presensi</h1>
-              <p className="text-sm text-fd-muted-foreground">
-                {attendanceCount.toLocaleString()} record tersedia
-              </p>
             </div>
           </div>
 

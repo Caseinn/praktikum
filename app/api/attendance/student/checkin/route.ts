@@ -3,7 +3,9 @@ import { prisma } from "@/lib/core/prisma";
 import { haversineDistanceMeters } from "@/lib/core/geo";
 import { consumeCheckinNonce } from "@/lib/checkin-nonce";
 import { checkRateLimit, getRateLimitKey } from "@/lib/core/rate-limit";
-import { ok, unauthorized, forbidden, error, notFound, badRequest } from "@/lib/shared/api/response";
+import { ok, unauthorized, forbidden, error, notFound } from "@/lib/shared/api/response";
+import { validateBody, parseJsonBody } from "@/lib/shared/api/validation";
+import { checkinSchema } from "@/lib/validations/schemas";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -16,30 +18,16 @@ export async function POST(req: Request) {
     return error("Terlalu banyak permintaan.", 429, "RATE_LIMIT");
   }
 
-  const body = await req.json();
-  const { sessionId, nonce, latitude, longitude } = body as {
-    sessionId?: string;
-    nonce?: string;
-    latitude?: number;
-    longitude?: number;
-  };
+  const rawBody = await parseJsonBody(req);
+  const validation = validateBody(checkinSchema, rawBody);
+  if (!validation.success) return validation.response;
 
-  if (!sessionId || typeof sessionId !== "string") {
-    return badRequest("Session ID wajib diisi.");
-  }
-
-  if (!nonce || typeof nonce !== "string") {
-    return badRequest("Nonce wajib diisi.");
-  }
-
-  if (typeof latitude !== "number" || typeof longitude !== "number") {
-    return badRequest("Koordinat wajib berupa angka.");
-  }
+  const { sessionId, nonce, latitude, longitude } = validation.data;
 
   const user = await prisma.user.findUnique({ where: { email: session.user.email } });
   if (!user) return notFound("Pengguna tidak ditemukan.");
   if (!user.nim) {
-    return badRequest("NIM tidak terdeteksi dari email.");
+    return error("NIM tidak terdeteksi dari email.", 400);
   }
 
   const roster = await prisma.studentRoster.findUnique({
@@ -59,7 +47,7 @@ export async function POST(req: Request) {
 
   const now = new Date();
   if (now < attendanceSession.startTime || now > attendanceSession.endTime) {
-    return badRequest("Sesi presensi belum aktif atau sudah berakhir.");
+    return error("Sesi presensi belum aktif atau sudah berakhir.", 400);
   }
 
   const nonceValid = await consumeCheckinNonce(user.id, attendanceSession.id, nonce);

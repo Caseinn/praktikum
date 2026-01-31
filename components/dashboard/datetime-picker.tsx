@@ -44,9 +44,11 @@ export function DateTimePicker({ value, onChange, required }: DateTimePickerProp
         setIsOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [isOpen]);
 
   const handleDateSelect = (selectedDate: Date | undefined) => {
     if (selectedDate) {
@@ -126,44 +128,49 @@ export function DateTimePicker({ value, onChange, required }: DateTimePickerProp
 
       {isOpen && (
         <div className="absolute top-full left-0 z-50 mt-2 w-auto rounded-xl border border-fd-border bg-fd-card shadow-xl">
-          <div className="p-3 border-b border-fd-border">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={handleDateSelect}
-              locale={id}
-              className="p-0"
-            />
-          </div>
-          <div className="flex items-center justify-center gap-3 p-3 bg-fd-muted/30 border-t border-fd-border">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-fd-muted-foreground" />
-              <input
-                type="number"
-                min="0"
-                max="23"
-                value={String(hours).padStart(2, "0")}
-                onChange={(e) => handleTimeChange("hours", e.target.value)}
-                className="w-14 rounded-md border border-fd-border bg-fd-background px-2 py-1.5 text-center text-sm font-medium focus:border-fd-primary focus:outline-none focus:ring-1 focus:ring-fd-primary"
-              />
-              <span className="text-sm font-medium">:</span>
-              <input
-                type="number"
-                min="0"
-                max="59"
-                value={String(minutes).padStart(2, "0")}
-                onChange={(e) => handleTimeChange("minutes", e.target.value)}
-                className="w-14 rounded-md border border-fd-border bg-fd-background px-2 py-1.5 text-center text-sm font-medium focus:border-fd-primary focus:outline-none focus:ring-1 focus:ring-fd-primary"
+          <div className="flex">
+            <div className="p-3 border-r border-fd-border">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={handleDateSelect}
+                locale={id}
+                className="p-0"
               />
             </div>
-          </div>
-          <div className="flex justify-end gap-2 p-3 border-t border-fd-border bg-fd-muted/20">
-            <Button variant="outline" size="sm" onClick={handleClear}>
-              Reset
-            </Button>
-            <Button size="sm" onClick={handleConfirm}>
-              OK
-            </Button>
+            <div className="flex flex-col justify-between p-3 bg-fd-muted/20">
+              <div className="flex items-center justify-center gap-2">
+                <Clock className="h-4 w-4 text-fd-muted-foreground" />
+                <span className="text-sm font-medium text-fd-muted-foreground">Waktu</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  max="23"
+                  value={String(hours).padStart(2, "0")}
+                  onChange={(e) => handleTimeChange("hours", e.target.value)}
+                  className="w-14 rounded-md border border-fd-border bg-fd-background px-2 py-1.5 text-center text-sm font-medium focus:border-fd-primary focus:outline-none focus:ring-1 focus:ring-fd-primary"
+                />
+                <span className="text-lg font-medium">:</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="59"
+                  value={String(minutes).padStart(2, "0")}
+                  onChange={(e) => handleTimeChange("minutes", e.target.value)}
+                  className="w-14 rounded-md border border-fd-border bg-fd-background px-2 py-1.5 text-center text-sm font-medium focus:border-fd-primary focus:outline-none focus:ring-1 focus:ring-fd-primary"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleClear}>
+                  Reset
+                </Button>
+                <Button size="sm" onClick={handleConfirm}>
+                  OK
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}

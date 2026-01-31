@@ -1,6 +1,8 @@
 import { auth } from "@/lib/core/auth";
 import { studentService } from "@/lib/features/students/service";
-import { created, deleted, error, unauthorized, forbidden, badRequest, notFound } from "@/lib/shared/api/response";
+import { created, deleted, error, unauthorized, forbidden, notFound } from "@/lib/shared/api/response";
+import { validateBody, parseJsonBody, getQueryParam } from "@/lib/shared/api/validation";
+import { studentSchema } from "@/lib/validations/schemas";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -8,17 +10,13 @@ export async function POST(request: Request) {
   if (session.user.role !== "ADMIN") return forbidden();
 
   try {
-    const body = await request.json();
-    const { nim, fullName } = body;
+    const body = await parseJsonBody(request);
+    if (!body) return error("Payload tidak valid.", 400);
 
-    if (!nim || typeof nim !== "string") {
-      return badRequest("NIM wajib diisi.");
-    }
+    const validation = validateBody(studentSchema, body);
+    if (!validation.success) return validation.response;
 
-    if (!fullName || typeof fullName !== "string") {
-      return badRequest("Nama wajib diisi.");
-    }
-
+    const { nim, fullName } = validation.data;
     const result = await studentService.addStudent({ nim, fullName });
 
     if (result.success) {
@@ -38,11 +36,10 @@ export async function DELETE(request: Request) {
   if (session.user.role !== "ADMIN") return forbidden();
 
   try {
-    const { searchParams } = new URL(request.url);
-    const nim = searchParams.get("nim");
+    const nim = getQueryParam(request, "nim");
 
     if (!nim) {
-      return badRequest("NIM wajib diisi.");
+      return error("NIM wajib diisi.", 400);
     }
 
     const result = await studentService.deleteStudent(nim);

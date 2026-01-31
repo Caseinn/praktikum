@@ -86,9 +86,6 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
           href={user?.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/student"}
           className="flex items-center gap-2 px-2 py-1.5"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-fd-primary text-fd-primary-foreground">
-            <span className="text-sm font-bold">P</span>
-          </div>
           <span className="text-base font-semibold text-fd-foreground">
             Praktikum
           </span>

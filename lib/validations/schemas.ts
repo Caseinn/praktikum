@@ -21,6 +21,12 @@ export const bulkAttendanceSchema = z.object({
   nims: z.array(z.string()).min(1, "Daftar NIM wajib diisi."),
 });
 
+export const studentSchema = z.object({
+  nim: z.string().trim().min(1, "NIM wajib diisi."),
+  fullName: z.string().trim().min(1, "Nama wajib diisi."),
+});
+
 export type CheckinInput = z.infer<typeof checkinSchema>;
 export type SessionCreateInput = z.infer<typeof sessionCreateSchema>;
 export type BulkAttendanceInput = z.infer<typeof bulkAttendanceSchema>;
+export type StudentInput = z.infer<typeof studentSchema>;

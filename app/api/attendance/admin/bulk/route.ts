@@ -2,7 +2,9 @@ import { createHash } from "crypto";
 import { auth } from "@/lib/core/auth";
 import { attendanceService } from "@/lib/features/attendance/service";
 import { checkRateLimit, getRateLimitKey } from "@/lib/core/rate-limit";
-import { ok, error, unauthorized, forbidden, badRequest, notFound } from "@/lib/shared/api/response";
+import { ok, error, unauthorized, forbidden, notFound } from "@/lib/shared/api/response";
+import { validateBody } from "@/lib/shared/api/validation";
+import { bulkAttendanceSchema } from "@/lib/validations/schemas";
 
 const MAX_BODY_BYTES = 100_000;
 
@@ -26,28 +28,15 @@ export async function POST(req: Request) {
   try {
     body = rawBody ? JSON.parse(rawBody) : {};
   } catch {
-    return badRequest("Payload tidak valid.");
+    return error("Payload tidak valid.", 400);
   }
 
-  const { sessionId, status, nims: rawNims } = body as {
-    sessionId?: string;
-    status?: string;
-    nims?: string[];
-  };
+  const validation = validateBody(bulkAttendanceSchema, body);
+  if (!validation.success) return validation.response;
 
-  if (!sessionId || typeof sessionId !== "string") {
-    return badRequest("Session ID wajib diisi.");
-  }
+  const { sessionId, status, nims } = validation.data;
 
-  if (!status || !["HADIR", "IZIN", "TIDAK_HADIR"].includes(status)) {
-    return badRequest("Status tidak valid.");
-  }
-
-  if (!Array.isArray(rawNims)) {
-    return badRequest("Daftar NIM wajib berupa array.");
-  }
-
-  const result = await attendanceService.bulkUpdateAttendance(sessionId, status, rawNims, session.user.email);
+  const result = await attendanceService.bulkUpdateAttendance(sessionId, status, nims, session.user.email);
 
   if (result.success) {
     const adminHash = session.user.email
