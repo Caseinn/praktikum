@@ -12,12 +12,9 @@ function ToastHandler() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (searchParams.get("logout") === "success") {
-      toast.success("Logout berhasil.", {
-        onDismiss: () => {
-          window.history.replaceState(null, "", "/");
-        },
-      });
+    if (searchParams.get("loggedout") === "true") {
+      window.history.replaceState(null, "", "/");
+      toast.success("Logout berhasil.");
     }
   }, [searchParams]);
 

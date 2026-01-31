@@ -27,6 +27,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 
+
 interface NavItem {
   title: string;
   url: string;
@@ -174,8 +175,8 @@ function LogoutButton() {
 
     try {
       const { signOut } = await import("next-auth/react");
-      await signOut({ redirect: false, callbackUrl: "/?logout=success" });
-      window.location.href = "/?logout=success";
+      await signOut({ redirect: false });
+      window.location.href = "/?loggedout=true";
     } catch {
       setIsLoggingOut(false);
     }
