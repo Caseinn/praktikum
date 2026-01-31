@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { haversineDistanceMeters } from "@/lib/geo";
 import { consumeCheckinNonce } from "@/lib/checkin-nonce";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
+import { checkinSchema } from "@/lib/validations/schemas";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -24,12 +25,14 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json();
-  const sessionId = typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
-  const nonce = typeof body?.nonce === "string" ? body.nonce.trim() : "";
-  const { latitude, longitude } = body ?? {};
-  if (!sessionId || !nonce) {
-    return NextResponse.json({ error: "Session ID wajib diisi." }, { status: 400 });
+  const parse = checkinSchema.safeParse(body);
+
+  if (!parse.success) {
+    const errors = parse.error.issues.map((e) => e.message);
+    return NextResponse.json({ error: errors[0] || "Input tidak valid." }, { status: 400 });
   }
+
+  const { sessionId, nonce, latitude, longitude } = parse.data;
 
   const user = await prisma.user.findUnique({ where: { email: session.user.email } });
   if (!user) return NextResponse.json({ error: "Pengguna tidak ditemukan." }, { status: 404 });
@@ -68,15 +71,9 @@ export async function POST(req: Request) {
     );
   }
 
-  const lat = Number(latitude);
-  const lon = Number(longitude);
-  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-    return NextResponse.json({ error: "Koordinat tidak valid." }, { status: 400 });
-  }
-
   const dist = haversineDistanceMeters(
-    lat,
-    lon,
+    latitude,
+    longitude,
     attendanceSession.latitude,
     attendanceSession.longitude
   );

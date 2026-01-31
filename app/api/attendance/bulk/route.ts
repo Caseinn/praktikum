@@ -4,8 +4,7 @@ import { AttendanceStatus } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
-
-const ALLOWED_STATUSES: AttendanceStatus[] = ["HADIR", "IZIN", "TIDAK_HADIR"];
+import { bulkAttendanceSchema } from "@/lib/validations/schemas";
 
 const MAX_BODY_BYTES = 100_000;
 const MAX_NIMS = 200;
@@ -33,40 +32,27 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Payload terlalu besar." }, { status: 413 });
   }
 
-  let body: unknown = {};
+  let body: unknown;
   try {
     body = rawBody ? JSON.parse(rawBody) : {};
   } catch {
     return NextResponse.json({ error: "Payload tidak valid." }, { status: 400 });
   }
 
-  if (!body || typeof body !== "object") {
-    return NextResponse.json({ error: "Payload tidak valid." }, { status: 400 });
+  const parse = bulkAttendanceSchema.safeParse(body);
+  if (!parse.success) {
+    const errors = parse.error.issues.map((e) => e.message);
+    return NextResponse.json({ error: errors[0] || "Input tidak valid." }, { status: 400 });
   }
 
-  const { sessionId: rawSessionId, status: rawStatusValue, nims: rawNimsValue } = body as Record<string, unknown>;
+  const { sessionId, status, nims: rawNims } = parse.data;
+  const uniqueNims = Array.from(new Set(rawNims.map((nim) => nim.trim()).filter(Boolean)));
 
-  const sessionId = typeof rawSessionId === "string" ? rawSessionId.trim() : "";
-  const rawStatus = typeof rawStatusValue === "string" ? rawStatusValue.trim().toUpperCase() : "";
-  const status = rawStatus as AttendanceStatus;
-  const rawNims = Array.isArray(rawNimsValue) ? rawNimsValue : [];
-  const nims = rawNims
-    .filter((nim: unknown): nim is string => typeof nim === "string")
-    .map((nim: string) => nim.trim())
-    .filter(Boolean);
-  const uniqueNims = Array.from(new Set<string>(nims));
-
-  if (!sessionId || uniqueNims.length === 0) {
-    return NextResponse.json(
-      { error: "Session ID dan daftar NIM wajib diisi." },
-      { status: 400 }
-    );
+  if (uniqueNims.length === 0) {
+    return NextResponse.json({ error: "Daftar NIM wajib diisi." }, { status: 400 });
   }
   if (uniqueNims.length > MAX_NIMS) {
     return NextResponse.json({ error: "Jumlah NIM terlalu banyak." }, { status: 413 });
-  }
-  if (!ALLOWED_STATUSES.includes(status)) {
-    return NextResponse.json({ error: "Status tidak valid." }, { status: 400 });
   }
 
   const attendanceSession = await prisma.attendanceSession.findUnique({
@@ -99,8 +85,8 @@ export async function POST(req: Request) {
       chunk.map((user) =>
         prisma.attendanceRecord.upsert({
           where: { userId_sessionId: { userId: user.id, sessionId } },
-          update: { status, attendedAt: timestamp },
-          create: { userId: user.id, sessionId, status, attendedAt: timestamp },
+          update: { status: status as AttendanceStatus, attendedAt: timestamp },
+          create: { userId: user.id, sessionId, status: status as AttendanceStatus, attendedAt: timestamp },
         })
       )
     );

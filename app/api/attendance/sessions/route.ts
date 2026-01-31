@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseWIBDateTime } from "@/lib/time";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
+import { sessionCreateSchema } from "@/lib/validations/schemas";
 
 const MAX_BODY_BYTES = 20_000;
 
@@ -50,43 +51,26 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Payload terlalu besar." }, { status: 413 });
   }
 
-  let body: unknown = {};
+  let body: unknown;
   try {
     body = rawBody ? JSON.parse(rawBody) : {};
   } catch {
     return NextResponse.json({ error: "Payload tidak valid." }, { status: 400 });
   }
 
-  if (!body || typeof body !== "object") {
-    return NextResponse.json({ error: "Payload tidak valid." }, { status: 400 });
+  const parse = sessionCreateSchema.safeParse(body);
+  if (!parse.success) {
+    const errors = parse.error.issues.map((e) => e.message);
+    return NextResponse.json({ error: errors[0] || "Input tidak valid." }, { status: 400 });
   }
 
-  const { title, startTime, latitude, longitude, radius } = body as Record<string, unknown>;
-
-  if (typeof title !== "string" || typeof startTime !== "string") {
-    return NextResponse.json({ error: "Judul dan waktu mulai wajib diisi." }, { status: 400 });
-  }
-
-  if (!title || !startTime) {
-    return NextResponse.json({ error: "Judul dan waktu mulai wajib diisi." }, { status: 400 });
-  }
-
+  const { title, startTime, latitude, longitude, radius } = parse.data;
   const startTimeUTC = parseWIBDateTime(startTime);
   if (!startTimeUTC) {
     return NextResponse.json({ error: "Waktu mulai tidak valid." }, { status: 400 });
   }
 
   const endTimeUTC = new Date(startTimeUTC.getTime() + 60 * 60 * 1000);
-
-  const lat = Number(latitude);
-  const lon = Number(longitude);
-  const rad = Number(radius);
-  if (!Number.isFinite(lat) || !Number.isFinite(lon) || !Number.isFinite(rad)) {
-    return NextResponse.json({ error: "Koordinat atau radius tidak valid." }, { status: 400 });
-  }
-  if (rad <= 0) {
-    return NextResponse.json({ error: "Radius harus lebih dari 0." }, { status: 400 });
-  }
 
   const admin = await prisma.user.findUnique({ where: { email: session.user.email } });
   if (!admin) return NextResponse.json({ error: "Admin tidak ditemukan." }, { status: 404 });
@@ -96,9 +80,9 @@ export async function POST(req: Request) {
       title,
       startTime: startTimeUTC,
       endTime: endTimeUTC,
-      latitude: lat,
-      longitude: lon,
-      radius: rad,
+      latitude,
+      longitude,
+      radius,
       createdById: admin.id,
     },
   });
