@@ -174,6 +174,13 @@ export default function AttendanceDataTable({
         enableHiding: false,
       },
       {
+        accessorKey: "nim",
+        header: "NIM",
+        cell: ({ row }) => (
+          <span className="font-mono text-fd-foreground">{row.original.nim}</span>
+        ),
+      },
+      {
         accessorKey: "name",
         header: "Nama",
         cell: ({ row }) => (
@@ -182,13 +189,7 @@ export default function AttendanceDataTable({
           </div>
         ),
       },
-      {
-        accessorKey: "nim",
-        header: "NIM",
-        cell: ({ row }) => (
-          <span className="text-sm text-fd-muted-foreground">{row.original.nim}</span>
-        ),
-      },
+
       {
         accessorKey: "status",
         header: "Status",
@@ -295,7 +296,7 @@ export default function AttendanceDataTable({
   const hasFilter = globalFilter.trim().length > 0;
 
   return (
-    <div className="rounded-lg border border-fd-border bg-fd-background">
+    <div className="rounded-xl border border-fd-border bg-fd-card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-fd-border px-4 py-3 md:flex-nowrap md:gap-4 lg:gap-6">
         <div className="flex flex-1 flex-wrap items-center gap-3 md:flex-nowrap md:gap-4">
           <Input
@@ -375,20 +376,20 @@ export default function AttendanceDataTable({
         </div>
       </div>
 
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id} className="border-fd-border hover:bg-fd-muted/50">
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className="text-sm text-fd-muted-foreground">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
         <TableBody>
           {table.getRowModel().rows.length > 0 ? (
             table.getRowModel().rows.map((row) => (
@@ -402,10 +403,15 @@ export default function AttendanceDataTable({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length} className="py-6 text-center text-sm">
-                {hasFilter
-                  ? "Tidak ada hasil pencarian yang sesuai."
-                  : "Belum ada data Mahasiswa aktif."}
+              <TableCell colSpan={columns.length} className="text-center py-8">
+                <div className="flex flex-col items-center gap-2 text-fd-muted-foreground">
+                  <Users className="h-8 w-8" />
+                  <p>
+                    {hasFilter
+                      ? "Tidak ada hasil pencarian yang sesuai."
+                      : "Belum ada data Mahasiswa aktif."}
+                  </p>
+                </div>
               </TableCell>
             </TableRow>
           )}

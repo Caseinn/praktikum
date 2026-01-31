@@ -2,9 +2,8 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { CalendarCheck, UserCheck, ArrowLeft } from "lucide-react";
+import { CalendarCheck, UserCheck, ArrowRight, History, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { formatWIB } from "@/lib/time";
-import { LogoutButton } from "@/components/shared/logout-button";
 
 export default async function StudentDashboard() {
   const session = await auth();
@@ -16,26 +15,24 @@ export default async function StudentDashboard() {
       attendance: {
         include: { session: true },
         orderBy: { attendedAt: "desc" },
+        take: 5,
       },
     },
   });
 
   if (!user?.nim) {
     return (
-      <div className="p-6">
+      <main className="p-4 sm:p-6 animate-fade-up">
         <div className="rounded-xl border border-fd-border bg-fd-card p-4 text-sm text-fd-foreground">
           NIM tidak terdeteksi dari email.
         </div>
-      </div>
+      </main>
     );
   }
 
-  // Ambil semua sesi yang sudah berakhir
   const now = new Date();
   const pastSessions = await prisma.attendanceSession.findMany({
-    where: {
-      endTime: { lt: now },
-    },
+    where: { endTime: { lt: now } },
   });
 
   const totalSesiLalu = pastSessions.length;
@@ -49,112 +46,55 @@ export default async function StudentDashboard() {
     totalRecorded > 0 ? Math.round(((hadirCount + izinCount) / totalRecorded) * 100) : 0;
 
   return (
-    <main className="space-y-8 p-4 sm:p-6">
-      <Link
-        href="/"
-        className="inline-flex items-center gap-1.5 text-sm text-fd-muted-foreground hover:underline"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Kembali
-      </Link>
-      <section className="rounded-2xl border border-fd-border bg-fd-foreground p-6 shadow-sm">
-        <div className="flex flex-wrap items-center gap-4 sm:flex-nowrap sm:justify-between">
-
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-fd-background text-fd-foreground">
-              <UserCheck className="h-6 w-6" />
-            </div>
-
-            <div>
-              <h1 className="text-base font-semibold text-fd-background sm:text-xl">
-                Halo, {session.user.name ?? "Mahasiswa"}
-              </h1>
-              <p className="text-xs text-fd-background sm:text-sm">
-                NIM: {user.nim}
-              </p>
-            </div>
+    <main className="space-y-6 p-4 sm:p-6 animate-fade-up">
+      <div className="grid gap-3 grid-cols-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-fd-border bg-fd-card p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] uppercase tracking-[0.15em] text-fd-muted-foreground line-clamp-1">Hadir</p>
+            <CheckCircle2 className="h-4 w-4 text-fd-success flex-shrink-0" />
           </div>
-
-          <div className="flex w-full justify-end sm:w-auto">
-            <LogoutButton />
-          </div>
+          <p className="text-2xl font-semibold text-fd-success">{hadirCount}</p>
         </div>
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-2xl border border-fd-border bg-fd-card p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-fd-foreground">
-              Statistik Kehadiran
-            </h2>
+        <div className="rounded-xl border border-fd-border bg-fd-card p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] uppercase tracking-[0.15em] text-fd-muted-foreground line-clamp-1">Izin</p>
+            <Clock className="h-4 w-4 text-fd-warning flex-shrink-0" />
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border border-fd-border bg-fd-background p-4 text-center">
-              <p className="text-xs uppercase tracking-[0.2em] text-fd-muted-foreground">
-                Hadir
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-[color:var(--color-fd-success)]">
-                {hadirCount}
-              </p>
-            </div>
-            <div className="rounded-lg border border-fd-border bg-fd-background p-4 text-center">
-              <p className="text-xs uppercase tracking-[0.2em] text-fd-muted-foreground">
-                Izin
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-[color:var(--color-fd-warning)]">
-                {izinCount}
-              </p>
-            </div>
-            <div className="rounded-lg border border-fd-border bg-fd-background p-4 text-center">
-              <p className="text-xs uppercase tracking-[0.2em] text-fd-muted-foreground">
-                Tidak hadir
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-[color:var(--color-fd-error)]">
-                {tidakHadirCount}
-              </p>
-            </div>
-          </div>
+          <p className="text-2xl font-semibold text-fd-warning">{izinCount}</p>
         </div>
-
-        <div className="rounded-2xl border border-fd-border bg-fd-card p-5 shadow-sm">
-          <p className="text-xs uppercase tracking-[0.2em] text-fd-muted-foreground">
-            Konsistensi
-          </p>
-          <p className="mt-2 text-3xl font-semibold text-fd-foreground">
-            {attendanceRate}%
-          </p>
-          <p className="mt-1 text-sm text-fd-muted-foreground">
-            Persentase kehadiran berdasarkan sesi yang sudah berakhir.
-          </p>
-          <div className="mt-4 h-2 w-full rounded-full bg-fd-muted">
-            <div
-              className="h-full rounded-full bg-fd-primary transition-all"
-              style={{ width: `${attendanceRate}%` }}
-            />
+        <div className="rounded-xl border border-fd-border bg-fd-card p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] uppercase tracking-[0.15em] text-fd-muted-foreground line-clamp-1">Tidak Hadir</p>
+            <XCircle className="h-4 w-4 text-fd-error flex-shrink-0" />
           </div>
+          <p className="text-2xl font-semibold text-fd-error">{tidakHadirCount}</p>
         </div>
-      </section>
+      </div>
 
-      <section className="rounded-2xl border border-fd-border bg-fd-card p-5 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-base font-semibold text-fd-foreground">
-              Presensi Hari Ini
-            </h2>
-            <p className="text-sm text-fd-muted-foreground">
-              Masuk ke sesi aktif dan lakukan check-in.
-            </p>
-          </div>
-          <Link
-            href="/dashboard/student/attendance"
-            className="inline-flex items-center gap-2 rounded-md bg-fd-primary px-5 py-2.5 text-sm font-semibold text-fd-primary-foreground shadow-sm transition hover:opacity-90"
-          >
-            Presensi Sekarang
-          </Link>
-        </div>
-      </section>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Link
+          href="/dashboard/student/attendance"
+          className="flex items-center justify-between gap-3 rounded-xl border border-fd-border bg-fd-card p-4 text-sm font-medium text-fd-foreground transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <span className="flex items-center gap-2">
+            <CalendarCheck className="h-4 w-4" />
+            Presensi
+          </span>
+          <ArrowRight className="h-4 w-4 text-fd-muted-foreground" />
+        </Link>
+        <Link
+          href="/dashboard/student/history"
+          className="flex items-center justify-between gap-3 rounded-xl border border-fd-border bg-fd-card p-4 text-sm font-medium text-fd-foreground transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <span className="flex items-center gap-2">
+            <History className="h-4 w-4" />
+            Riwayat
+          </span>
+          <ArrowRight className="h-4 w-4 text-fd-muted-foreground" />
+        </Link>
+      </div>
 
-      <section className="space-y-3">
+      <div className="space-y-3">
         <h2 className="text-lg font-semibold text-fd-foreground">Riwayat Presensi</h2>
         {user.attendance.length === 0 ? (
           <div className="rounded-xl border border-fd-border bg-fd-card p-6 text-center">
@@ -201,8 +141,7 @@ export default async function StudentDashboard() {
             })}
           </div>
         )}
-      </section>
+      </div>
     </main>
   );
 }
-

@@ -3,6 +3,19 @@
 @import 'fumadocs-ui/css/preset.css';
 @import "tw-animate-css";
 
+@layer base {
+  :root {
+    --sidebar: var(--color-fd-card);
+    --sidebar-foreground: var(--color-fd-foreground);
+    --sidebar-muted: var(--color-fd-muted);
+    --sidebar-muted-foreground: var(--color-fd-muted-foreground);
+    --sidebar-accent: var(--color-fd-accent);
+    --sidebar-accent-foreground: var(--color-fd-accent-foreground);
+    --sidebar-border: var(--color-fd-border);
+    --sidebar-ring: var(--color-fd-ring);
+  }
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;

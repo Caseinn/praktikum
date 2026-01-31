@@ -9,7 +9,7 @@ function buildCsp(nonce: string): string {
     "base-uri 'self'",
     "object-src 'none'",
     "frame-ancestors 'none'",
-    "img-src 'self' data:",
+    "img-src 'self' data: https://lh3.googleusercontent.com",
     "font-src 'self' data:",
     "style-src 'self' 'unsafe-inline'",
     `script-src 'self' 'nonce-${nonce}'`,
@@ -45,7 +45,7 @@ function applyCorsHeaders(req: NextRequest, res: NextResponse) {
 function applySecurityHeaders(res: NextResponse) {
   res.headers.set("Cross-Origin-Opener-Policy", "same-origin");
   res.headers.set("Cross-Origin-Resource-Policy", "same-origin");
-  res.headers.set("Cross-Origin-Embedder-Policy", "require-corp");
+  // res.headers.set("Cross-Origin-Embedder-Policy", "require-corp");
   res.headers.set("X-XSS-Protection", "1; mode=block");
 }
 

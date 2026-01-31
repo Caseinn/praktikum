@@ -50,3 +50,11 @@ export function formatWIB(date: Date): string {
     timeZone: WIB_TIMEZONE,
   });
 }
+
+export function formatWIBTimeOnly(date: Date): string {
+  return date.toLocaleString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: WIB_TIMEZONE,
+  });
+}
