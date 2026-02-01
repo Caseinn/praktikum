@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
 import {
   Dialog,
   DialogClose,
@@ -16,43 +17,39 @@ import { Field, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Upload, FileSpreadsheet } from "lucide-react";
-import { apiClient } from "@/lib/api/client";
-
-type ImportResult = {
-  count?: number;
-  message?: string;
-};
+import { importStudentsFromCsv } from "@/lib/actions/students";
 
 export function ImportCSVDialog() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [importing, setImporting] = useState(false);
 
-  const handleImport = async () => {
+  const mutation = useMutation({
+    mutationFn: () => {
+      if (!csvFile) throw new Error("No file");
+      return importStudentsFromCsv(csvFile);
+    },
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success(`Data mahasiswa berhasil diimpor (${result.count} mahasiswa).`);
+        setOpen(false);
+        setCsvFile(null);
+        router.refresh();
+      } else {
+        toast.error(result.error ?? "Gagal mengimpor data.");
+      }
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Gagal mengimpor data.");
+    },
+  });
+
+  const handleImport = () => {
     if (!csvFile) {
       toast.error("Pilih file CSV terlebih dahulu.");
       return;
     }
-
-    setImporting(true);
-    const formData = new FormData();
-    formData.append("file", csvFile);
-
-    try {
-      await apiClient<ImportResult>("/api/students/admin/import", {
-        method: "POST",
-        body: formData,
-      });
-      toast.success("Data mahasiswa berhasil diimpor.");
-      setOpen(false);
-      setCsvFile(null);
-      router.refresh();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Gagal mengimpor data.");
-    } finally {
-      setImporting(false);
-    }
+    mutation.mutate();
   };
 
   return (
@@ -104,10 +101,10 @@ export function ImportCSVDialog() {
           </DialogClose>
           <Button
             onClick={handleImport}
-            disabled={!csvFile || importing}
+            disabled={!csvFile || mutation.isPending}
             className="bg-fd-primary text-fd-primary-foreground"
           >
-            {importing ? "Mengimpor..." : "Import"}
+            {mutation.isPending ? "Mengimpor..." : "Import"}
           </Button>
         </DialogFooter>
       </DialogContent>

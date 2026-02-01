@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { Space_Grotesk } from 'next/font/google';
 import ThemeProviderClient from "@/components/shared/theme-provider";
+import { QueryProvider } from "@/lib/providers/query-provider";
 import { getSiteUrl } from "@/lib/site-url";
 
 const siteUrl = getSiteUrl();
@@ -43,7 +44,9 @@ export default async function Layout({ children }: LayoutProps<'/'>) {
     <html lang="id" className={spaceGrotesk.className} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col bg-fd-background text-fd-foreground antialiased">
         <ThemeProviderClient nonce={nonce}>
-          {children}
+          <QueryProvider>
+            {children}
+          </QueryProvider>
         </ThemeProviderClient>
       </body>
     </html>

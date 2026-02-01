@@ -1,7 +1,7 @@
 "use client";
 
-import { usePolling } from "@/lib/hooks/use-polling";
-import { useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getAdminStats, type DashboardStats, type ChartDataItem } from "@/lib/actions/admin";
 import {
   Calendar,
   Users,
@@ -12,27 +12,6 @@ import {
 } from "lucide-react";
 import { SessionChart } from "@/components/dashboard/session-chart";
 
-interface DashboardStats {
-  activeCount: number;
-  upcomingCount: number;
-  expiredCount: number;
-  studentCount: number;
-  totalSessions: number;
-}
-
-interface ChartDataItem {
-  date: string;
-  title: string;
-  label: string;
-  total: number;
-  hadir: number;
-}
-
-interface DashboardStatsResponse {
-  stats: DashboardStats;
-  chartData: ChartDataItem[];
-}
-
 interface DashboardStatsPollingProps {
   initialStats: DashboardStats;
   initialChartData: ChartDataItem[];
@@ -42,21 +21,15 @@ export function DashboardStatsPolling({
   initialStats,
   initialChartData,
 }: DashboardStatsPollingProps) {
-  const fetcher = useCallback(async (): Promise<DashboardStatsResponse> => {
-    const res = await fetch("/api/attendance/admin/stats");
-    if (!res.ok) throw new Error("Failed to fetch stats");
-    const json = await res.json();
-    return json.data;
-  }, []);
-
-  const { data } = usePolling<DashboardStatsResponse>({
-    fetcher,
-    interval: 10000,
-    enabled: true,
+  const { data } = useQuery({
+    queryKey: ["adminStats"],
+    queryFn: () => getAdminStats(),
+    refetchInterval: 10000,
+    initialData: { stats: initialStats, chartData: initialChartData },
   });
 
-  const stats = data?.stats ?? initialStats;
-  const chartData = data?.chartData ?? initialChartData;
+  const stats = data.stats;
+  const chartData = data.chartData;
 
   return (
     <>

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, CSRF_TTL_SECONDS } from "@/lib/core/csrf";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
@@ -39,13 +38,12 @@ function applyCorsHeaders(req: NextRequest, res: NextResponse) {
   res.headers.set("Vary", "Origin");
   res.headers.set("Access-Control-Allow-Credentials", "true");
   res.headers.set("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
-  res.headers.set("Access-Control-Allow-Headers", "Content-Type, X-CSRF-Token");
+  res.headers.set("Access-Control-Allow-Headers", "Content-Type");
 }
 
 function applySecurityHeaders(res: NextResponse) {
   res.headers.set("Cross-Origin-Opener-Policy", "same-origin");
   res.headers.set("Cross-Origin-Resource-Policy", "same-origin");
-  // res.headers.set("Cross-Origin-Embedder-Policy", "require-corp");
   res.headers.set("X-XSS-Protection", "1; mode=block");
 }
 
@@ -73,42 +71,15 @@ export function middleware(req: NextRequest) {
 
   const res = NextResponse.next();
   applySecurityHeaders(res);
-
-  if (pathname !== "/api/csrf") {
-    applyCorsHeaders(req, res);
-  }
+  applyCorsHeaders(req, res);
 
   if (req.method === "OPTIONS") {
     return new NextResponse(null, { status: 204, headers: res.headers });
   }
 
-  if (pathname.startsWith("/api/auth") || pathname === "/api/csrf") {
+  if (pathname.startsWith("/api/auth")) {
     applyLogoutHeaders(pathname, res);
     return res;
-  }
-
-  const csrfCookie = req.cookies.get(CSRF_COOKIE_NAME)?.value;
-  const csrfHeader = req.headers.get(CSRF_HEADER_NAME);
-
-  if (!SAFE_METHODS.has(req.method)) {
-    if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
-      return NextResponse.json(
-        { error: "Token CSRF tidak valid." },
-        { status: 403, headers: res.headers }
-      );
-    }
-    return res;
-  }
-
-  if (!csrfCookie) {
-    const token = crypto.randomUUID();
-    res.cookies.set(CSRF_COOKIE_NAME, token, {
-      httpOnly: true,
-      sameSite: "strict",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: CSRF_TTL_SECONDS,
-    });
   }
 
   return res;

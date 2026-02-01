@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
 import {
   Dialog,
   DialogClose,
@@ -19,8 +20,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarPlus, MapPin, Navigation, Info } from "lucide-react";
 import { DateTimePicker } from "@/components/dashboard/datetime-picker";
 import { formatWIBInputValue } from "@/lib/shared/time";
-import { apiClient } from "@/lib/api/client";
-import type { SessionFormData } from "@/lib/types/attendance";
+import { createSession } from "@/lib/actions/admin";
 
 function defaultWIBDateTime(hoursFromNow = 0): string {
   const future = new Date(Date.now() + hoursFromNow * 60 * 60 * 1000);
@@ -46,7 +46,6 @@ export function CreateSessionDialog() {
     radius: "100",
   });
   const [geoError, setGeoError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
 
   const getCurrentLocation = () => {
     setGeoError(null);
@@ -73,6 +72,32 @@ export function CreateSessionDialog() {
       }
     );
   };
+
+  const mutation = useMutation({
+    mutationFn: createSession,
+    onSuccess: (result) => {
+      if (result.success) {
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("session-created", "Sesi presensi berhasil dibuat!");
+        }
+        toast.success("Sesi presensi berhasil dibuat.");
+        setOpen(false);
+        setForm({
+          title: "",
+          startTime: defaultWIBDateTime(0),
+          latitude: "",
+          longitude: "",
+          radius: "100",
+        });
+        router.refresh();
+      } else {
+        toast.error(result.error ?? "Gagal membuat sesi.");
+      }
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Gagal membuat sesi.");
+    },
+  });
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -107,38 +132,13 @@ export function CreateSessionDialog() {
       return;
     }
 
-    setBusy(true);
-    const toastId = toast.loading("Menyimpan sesi presensi...");
-    try {
-      await apiClient<SessionFormData>("/api/attendance/admin/sessions", {
-        method: "POST",
-        body: JSON.stringify({
-          title: form.title.trim(),
-          startTime: form.startTime,
-          latitude: latitudeNum,
-          longitude: longitudeNum,
-          radius: radiusNum,
-        }),
-      });
-
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("session-created", "Sesi presensi berhasil dibuat!");
-      }
-      toast.dismiss(toastId);
-      setOpen(false);
-      setForm({
-        title: "",
-        startTime: defaultWIBDateTime(0),
-        latitude: "",
-        longitude: "",
-        radius: "100",
-      });
-      router.refresh();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Gagal membuat sesi.", { id: toastId });
-    } finally {
-      setBusy(false);
-    }
+    mutation.mutate({
+      title: form.title.trim(),
+      startTime: form.startTime,
+      latitude: latitudeNum,
+      longitude: longitudeNum,
+      radius: radiusNum,
+    });
   };
 
   return (
@@ -190,7 +190,7 @@ export function CreateSessionDialog() {
                   variant="outline"
                   size="sm"
                   onClick={getCurrentLocation}
-                  disabled={busy}
+                  disabled={mutation.isPending}
                   className="border-fd-border"
                 >
                   <Navigation className="h-4 w-4" />
@@ -252,8 +252,8 @@ export function CreateSessionDialog() {
             <DialogClose asChild>
               <Button variant="outline" type="button">Batal</Button>
             </DialogClose>
-            <Button type="submit" disabled={busy} className="bg-fd-primary text-fd-primary-foreground">
-              {busy ? "Menyimpan..." : "Buat Sesi"}
+            <Button type="submit" disabled={mutation.isPending} className="bg-fd-primary text-fd-primary-foreground">
+              {mutation.isPending ? "Menyimpan..." : "Buat Sesi"}
             </Button>
           </DialogFooter>
         </form>

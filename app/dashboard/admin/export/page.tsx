@@ -12,8 +12,8 @@ export default async function AdminExportPage() {
       <div className="w-full max-w-sm">
         <div className="rounded-xl border border-fd-border bg-fd-card p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-fd-success/10">
-              <FileSpreadsheet className="h-6 w-6 text-fd-success" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-fd-primary/10">
+              <FileSpreadsheet className="h-6 w-6 text-fd-primary" />
             </div>
             <div>
               <h1 className="text-xl font-semibold text-fd-foreground">Export Presensi</h1>

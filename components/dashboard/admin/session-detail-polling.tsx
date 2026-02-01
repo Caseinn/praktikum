@@ -1,29 +1,14 @@
 "use client";
 
-import { usePolling } from "@/lib/hooks/use-polling";
-import { useCallback } from "react";
-import AttendanceDataTable, {
-  type AttendanceTableRow,
-} from "@/components/dashboard/admin/attendance-data-table";
+import { useQuery } from "@tanstack/react-query";
+import { getSessionDetail, type AttendanceTableRow } from "@/lib/actions/admin";
+import AttendanceDataTable from "@/components/dashboard/admin/attendance-data-table";
 
 interface SessionStats {
   hadirCount: number;
   izinCount: number;
   tidakHadirCount: number;
   belumCount: number;
-}
-
-interface SessionDetailResponse {
-  session: {
-    id: string;
-    title: string;
-    startTime: string;
-    endTime: string;
-    radius: number;
-    isExpired: boolean;
-  };
-  stats: SessionStats;
-  rows: AttendanceTableRow[];
 }
 
 interface SessionDetailPollingProps {
@@ -39,17 +24,10 @@ export function SessionDetailPolling({
   initialRows,
   isExpired,
 }: SessionDetailPollingProps) {
-  const fetcher = useCallback(async (): Promise<SessionDetailResponse> => {
-    const res = await fetch(`/api/attendance/admin/sessions/${sessionId}`);
-    if (!res.ok) throw new Error("Failed to fetch session data");
-    const json = await res.json();
-    return json.data;
-  }, [sessionId]);
-
-  const { data } = usePolling<SessionDetailResponse>({
-    fetcher,
-    interval: 10000,
-    enabled: true,
+  const { data } = useQuery({
+    queryKey: ["sessionDetail", sessionId],
+    queryFn: () => getSessionDetail(sessionId),
+    refetchInterval: 10000,
   });
 
   const stats = data?.stats ?? initialStats;

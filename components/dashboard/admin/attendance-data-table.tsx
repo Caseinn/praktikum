@@ -12,8 +12,7 @@ import {
 } from "@tanstack/react-table";
 import { Check, CircleMinus, CircleSlash, MoreHorizontal, Users } from "lucide-react";
 import { toast } from "sonner";
-import { ensureCsrfToken } from "@/lib/csrf-client";
-import { CSRF_HEADER_NAME } from "@/lib/core/csrf";
+import { useMutation } from "@tanstack/react-query";
 import { formatWIB } from "@/lib/shared/time";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -33,6 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { bulkUpdateAttendance } from "@/lib/actions/admin";
 
 type AttendanceStatus = "HADIR" | "IZIN" | "TIDAK_HADIR" | "BELUM";
 
@@ -68,9 +68,40 @@ export default function AttendanceDataTable({
   const [globalFilter, setGlobalFilter] = useState("");
   const router = useRouter();
 
-  useEffect(() => {
-    setData(rows);
-  }, [rows]);
+  const bulkMutation = useMutation({
+    mutationFn: ({ nims, status }: { nims: string[]; status: AttendanceStatus }) =>
+      bulkUpdateAttendance(sessionId, status, nims),
+    onSuccess: (result, variables) => {
+      if (result.success) {
+        const timestamp = formatWIB(new Date());
+        setData((prev) =>
+          prev.map((row) =>
+            variables.nims.includes(row.nim) && !result.missing?.includes(row.nim)
+              ? { ...row, status: variables.status, attendedAtLabel: timestamp }
+              : row
+          )
+        );
+        setRowSelection({});
+
+        if ((result.updated ?? 0) > 0) {
+          toast.success(`Presensi diperbarui untuk ${result.updated} mahasiswa.`);
+        } else {
+          toast.info("Tidak ada presensi yang diperbarui.");
+        }
+        if (result.missing && result.missing.length > 0) {
+          toast.info(`NIM tidak ditemukan: ${result.missing.join(", ")}.`);
+        }
+        router.refresh();
+      } else {
+        toast.error(result.error ?? "Gagal memperbarui presensi.");
+      }
+      setBusyStatus(null);
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Terjadi kesalahan.");
+      setBusyStatus(null);
+    },
+  });
 
   const applyStatus = useCallback(
     async (nims: string[], status: AttendanceStatus) => {
@@ -79,70 +110,15 @@ export default function AttendanceDataTable({
         return;
       }
 
-      const toastId = toast.loading("Memperbarui presensi...");
       setBusyStatus(status);
-      try {
-        const csrfToken = await ensureCsrfToken();
-        if (!csrfToken) {
-          toast.error("Gagal mendapatkan token keamanan.", { id: toastId });
-          return;
-        }
-
-        const res = await fetch("/api/attendance/admin/bulk", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            [CSRF_HEADER_NAME]: csrfToken,
-          },
-          body: JSON.stringify({
-            sessionId,
-            nims,
-            status,
-          }),
-        });
-
-        const payload = await res.json();
-        if (!res.ok) {
-          toast.error(payload.error ?? "Gagal memperbarui presensi.", { id: toastId });
-          return;
-        }
-
-        const missingNims = Array.isArray(payload?.missing) ? payload.missing : [];
-        const missingSet = new Set(missingNims);
-        const appliedNims = nims.filter((nim) => !missingSet.has(nim));
-
-        if (appliedNims.length > 0) {
-          const timestamp = formatWIB(new Date());
-          setData((prev) =>
-            prev.map((row) =>
-              appliedNims.includes(row.nim)
-                ? { ...row, status, attendedAtLabel: timestamp }
-                : row
-            )
-          );
-        }
-        setRowSelection({});
-
-        const updatedCount = typeof payload?.updated === "number"
-          ? payload.updated
-          : appliedNims.length;
-        if (updatedCount > 0) {
-          toast.success(`Presensi diperbarui untuk ${updatedCount} mahasiswa.`, { id: toastId });
-        } else {
-          toast.info("Tidak ada presensi yang diperbarui.", { id: toastId });
-        }
-        if (missingNims.length > 0) {
-          toast.info(`NIM tidak ditemukan: ${missingNims.join(", ")}.`);
-        }
-        router.refresh();
-      } catch {
-        toast.error("Terjadi kesalahan saat memperbarui presensi.", { id: toastId });
-      } finally {
-        setBusyStatus(null);
-      }
+      bulkMutation.mutate({ nims, status });
     },
-    [router, sessionId]
+    [bulkMutation]
   );
+
+  useEffect(() => {
+    setData(rows);
+  }, [rows]);
 
   const columns = useMemo<ColumnDef<AttendanceTableRow>[]>(() => {
     return [

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -35,7 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ImportCSVDialog } from "./import-csv-dialog";
 import { AddStudentDialog } from "./add-student-dialog";
-import { apiClient } from "@/lib/api/client";
+import { deleteStudent } from "@/lib/actions/students";
 import type { Student } from "@/lib/types/student";
 
 interface StudentsTableProps {
@@ -70,22 +71,20 @@ const columns: ColumnDef<Student>[] = [
 
 function DeleteButton({ student }: { student: Student }) {
   const router = useRouter();
-  const [deleting, setDeleting] = useState(false);
-
-  const handleDelete = async () => {
-    setDeleting(true);
-    try {
-      await apiClient(`/api/students/admin?nim=${encodeURIComponent(student.nim)}`, {
-        method: "DELETE",
-      });
-      toast.success("Mahasiswa berhasil dihapus.");
-      router.refresh();
-    } catch (err) {
+  const { mutate: deleteStudentMutate, isPending } = useMutation({
+    mutationFn: deleteStudent,
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success("Mahasiswa berhasil dihapus.");
+        router.refresh();
+      } else {
+        toast.error(result.error || "Gagal menghapus mahasiswa.");
+      }
+    },
+    onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Gagal menghapus mahasiswa.");
-    } finally {
-      setDeleting(false);
-    }
-  };
+    },
+  });
 
   return (
     <AlertDialog>
@@ -114,11 +113,11 @@ function DeleteButton({ student }: { student: Student }) {
         <AlertDialogFooter>
           <AlertDialogCancel>Batal</AlertDialogCancel>
           <AlertDialogAction
-            onClick={handleDelete}
-            disabled={deleting}
+            onClick={() => deleteStudentMutate(student.nim)}
+            disabled={isPending}
             className="bg-fd-error text-fd-error-foreground hover:bg-fd-error/90"
           >
-            {deleting ? "Menghapus..." : "Hapus"}
+            {isPending ? "Menghapus..." : "Hapus"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

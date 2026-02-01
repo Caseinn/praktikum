@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ensureCsrfToken } from "@/lib/csrf-client";
-import { CSRF_HEADER_NAME } from "@/lib/core/csrf";
+import { useMutation } from "@tanstack/react-query";
+import { getCheckinNonce, checkIn } from "@/lib/actions/admin";
 
 type CheckinClientProps = {
   sessionId: string;
@@ -37,6 +37,27 @@ export default function CheckinClient({
   const [checkedIn, setCheckedIn] = useState(alreadyCheckedIn);
   const router = useRouter();
 
+  const checkInMutation = useMutation({
+    mutationFn: ({ nonce, latitude, longitude }: { nonce: string; latitude: number; longitude: number }) =>
+      checkIn(sessionId, nonce, latitude, longitude),
+    onSuccess: (result) => {
+      if (result.success) {
+        const distanceNote =
+          typeof result.distance === "number" ? ` Jarak: ${result.distance}m` : "";
+        toast.success(`Presensi berhasil.${distanceNote}`);
+        setCheckedIn(true);
+        router.refresh();
+      } else {
+        toast.error(result.error ?? "Gagal presensi");
+      }
+      setMsg("");
+    },
+    onError: (error) => {
+      setMsg("");
+      toast.error(error instanceof Error ? error.message : "Gagal presensi");
+    },
+  });
+
   const handleCheckIn = async () => {
     if (!isActive) {
       toast.error("Sesi belum aktif atau sudah berakhir.");
@@ -53,44 +74,15 @@ export default function CheckinClient({
       const loc = await getCurrentLocation();
       setMsg("Mengirim presensi...");
 
-      const nonceRes = await fetch(
-        `/api/attendance/student/nonce?sessionId=${encodeURIComponent(sessionId)}`
-      );
-      const nonceData = await nonceRes.json();
-      if (!nonceRes.ok || !nonceData?.nonce) {
-        setMsg("");
-        toast.error(nonceData?.error ?? "Gagal menyiapkan presensi.", { id: toastId });
-        return;
-      }
+      const nonce = await getCheckinNonce(sessionId);
 
-      const csrfToken = await ensureCsrfToken();
-      if (!csrfToken) {
-        setMsg("");
-        toast.error("Gagal mendapatkan token keamanan.", { id: toastId });
-        return;
-      }
-      const res = await fetch("/api/attendance/student/checkin", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          [CSRF_HEADER_NAME]: csrfToken ?? "",
-        },
-        body: JSON.stringify({ sessionId, nonce: nonceData.nonce, ...loc }),
+      checkInMutation.mutate({
+        nonce,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        setMsg("");
-        toast.error(data.error ?? "Gagal presensi", { id: toastId });
-        return;
-      }
-
-      setMsg("");
-      const distanceNote =
-        typeof data.distance === "number" ? ` Jarak: ${data.distance}m` : "";
-      toast.success(`Presensi berhasil.${distanceNote}`, { id: toastId });
-      setCheckedIn(true);
-      router.refresh();
+      toast.dismiss(toastId);
     } catch (err: unknown) {
       setMsg("");
       const message = err instanceof Error ? err.message : "Gagal mengambil lokasi";
@@ -102,10 +94,10 @@ export default function CheckinClient({
     <div className="space-y-3">
       <button
         onClick={handleCheckIn}
-        disabled={!isActive || checkedIn}
+        disabled={!isActive || checkedIn || checkInMutation.isPending}
         className="w-full rounded-md bg-fd-primary px-4 py-2.5 text-sm font-semibold text-fd-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        Hadir (Geofence)
+        {checkInMutation.isPending ? "Memproses..." : "Hadir (Geofence)"}
       </button>
       {msg && <p className="text-sm text-fd-muted-foreground">{msg}</p>}
     </div>

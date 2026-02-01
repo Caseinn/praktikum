@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
 import {
   Dialog,
   DialogClose,
@@ -17,14 +18,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Plus, Users } from "lucide-react";
-import { apiClient } from "@/lib/api/client";
-import type { Student } from "@/lib/types/student";
+import { addStudent } from "@/lib/actions/students";
 
 export function AddStudentDialog() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ nim: "", nama: "" });
-  const [busy, setBusy] = useState(false);
+
+  const mutation = useMutation({
+    mutationFn: () => addStudent(form.nim.trim(), form.nama.trim()),
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success("Mahasiswa berhasil ditambahkan.");
+        setOpen(false);
+        setForm({ nim: "", nama: "" });
+        router.refresh();
+      } else {
+        toast.error(result.error ?? "Gagal menambahkan mahasiswa.");
+      }
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Gagal menambahkan mahasiswa.");
+    },
+  });
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -38,24 +54,7 @@ export function AddStudentDialog() {
       return;
     }
 
-    setBusy(true);
-    try {
-      await apiClient<Student>("/api/students/admin", {
-        method: "POST",
-        body: JSON.stringify({
-          nim: form.nim.trim(),
-          fullName: form.nama.trim(),
-        }),
-      });
-      toast.success("Mahasiswa berhasil ditambahkan.");
-      setOpen(false);
-      setForm({ nim: "", nama: "" });
-      router.refresh();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Gagal menambahkan mahasiswa.");
-    } finally {
-      setBusy(false);
-    }
+    mutation.mutate();
   };
 
   return (
@@ -103,8 +102,8 @@ export function AddStudentDialog() {
             <DialogClose asChild>
               <Button variant="outline" type="button">Batal</Button>
             </DialogClose>
-            <Button type="submit" disabled={busy} className="bg-fd-primary text-fd-primary-foreground">
-              {busy ? "Menyimpan..." : "Tambah"}
+            <Button type="submit" disabled={mutation.isPending} className="bg-fd-primary text-fd-primary-foreground">
+              {mutation.isPending ? "Menyimpan..." : "Tambah"}
             </Button>
           </DialogFooter>
         </form>
