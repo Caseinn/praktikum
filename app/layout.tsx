@@ -1,10 +1,10 @@
-import '@/app/global.css';
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { Space_Grotesk } from 'next/font/google';
 import ThemeProviderClient from "@/components/shared/theme-provider";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { getSiteUrl } from "@/lib/site-url";
+import '@/app/global.css';
 
 const siteUrl = getSiteUrl();
 
@@ -19,12 +19,7 @@ export const metadata: Metadata = {
     siteName: "Praktikum",
     type: "website",
     url: siteUrl,
-    images: [
-      {
-        url: "/og-images.webp",
-        alt: "Praktikum",
-      },
-    ],
+    images: [{ url: "/og-images.webp", alt: "Praktikum" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -34,12 +29,11 @@ export const metadata: Metadata = {
   },
 };
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-});
+const spaceGrotesk = Space_Grotesk({ subsets: ['latin'] });
 
 export default async function Layout({ children }: LayoutProps<'/'>) {
   const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html lang="id" className={spaceGrotesk.className} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col bg-fd-background text-fd-foreground antialiased">

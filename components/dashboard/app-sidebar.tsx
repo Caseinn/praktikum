@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -133,6 +133,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                   src={user.image}
                   alt={user.name || "User"}
                   fill
+                  sizes="36px"
                   className="object-cover"
                 />
               </div>
@@ -168,6 +169,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
 
 function LogoutButton() {
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+  const router = useRouter();
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -176,7 +178,8 @@ function LogoutButton() {
     try {
       const { signOut } = await import("next-auth/react");
       await signOut({ redirect: false });
-      window.location.href = "/?loggedout=true";
+      router.push("/");
+      router.refresh();
     } catch {
       setIsLoggingOut(false);
     }

@@ -113,3 +113,54 @@ input[type="reset"]:not(:disabled),
 [role="button"]:not([aria-disabled="true"]) {
   cursor: pointer;
 }
+
+/* Custom Scrollbar using fd-* tokens */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-fd-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-fd-muted-foreground);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-fd-foreground);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--color-fd-foreground);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--color-fd-muted);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    background: var(--color-fd-muted);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-fd-muted-foreground);
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-fd-foreground);
+  }
+  
+  ::-webkit-scrollbar-thumb:active {
+    background: var(--color-fd-foreground);
+  }
+  
+  ::-webkit-scrollbar-corner {
+    background: var(--color-fd-muted);
+  }
+}
